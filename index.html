@@ -1,0 +1,1911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grok Team Invite Manager</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --panel-soft: #f0f3f6;
+      --text: #111318;
+      --muted: #68707d;
+      --line: #dde3ea;
+      --line-strong: #c9d1db;
+      --accent: #146ef5;
+      --accent-soft: #e8f0ff;
+      --green: #14834b;
+      --green-soft: #e6f6ee;
+      --amber: #9a6500;
+      --amber-soft: #fff4d8;
+      --red: #bc2f2f;
+      --red-soft: #ffebeb;
+      --shadow: 0 18px 45px rgba(24, 35, 51, 0.10);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 248px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      background: #101217;
+      color: #f6f7f9;
+      padding: 22px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-height: 42px;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: #101217;
+      background: #ffffff;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .brand-title { font-size: 15px; font-weight: 700; }
+    .brand-sub { font-size: 12px; color: #aeb6c2; margin-top: 2px; }
+
+    .nav {
+      display: grid;
+      gap: 6px;
+    }
+
+    .nav button {
+      width: 100%;
+      border: 0;
+      border-radius: 8px;
+      color: #cbd2dc;
+      background: transparent;
+      padding: 10px 11px;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .nav button.active,
+    .nav button:hover {
+      background: #20242d;
+      color: #ffffff;
+    }
+
+    .sidebar-note {
+      margin-top: auto;
+      border: 1px solid #2d3440;
+      border-radius: 8px;
+      padding: 12px;
+      color: #c5ccd6;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .main {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+      padding: 18px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .topbar p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .content {
+      padding: 26px 28px 38px;
+      display: grid;
+      gap: 18px;
+      max-width: 1180px;
+      width: 100%;
+    }
+
+    .page { display: none; }
+    .page.active { display: grid; gap: 18px; }
+
+    .hero {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+      gap: 22px;
+      align-items: center;
+    }
+
+    .hero h2 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    .hero p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      line-height: 1.55;
+      max-width: 680px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .generator-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 0.72fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .stat, .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .stat {
+      padding: 16px;
+      min-height: 102px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      line-height: 1;
+      font-weight: 750;
+      letter-spacing: 0;
+    }
+
+    .stat-sub {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .panel {
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .panel-title {
+      font-size: 15px;
+      font-weight: 750;
+      margin: 0;
+    }
+
+    .panel-sub {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .invite-form {
+      display: grid;
+      grid-template-columns: minmax(160px, 1fr) minmax(220px, 1.3fr) 130px 130px auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--text);
+      padding: 9px 10px;
+      outline: none;
+      min-height: 38px;
+    }
+
+    textarea {
+      min-height: 112px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .btn {
+      border: 1px solid var(--line-strong);
+      color: var(--text);
+      background: #ffffff;
+      border-radius: 8px;
+      min-height: 38px;
+      padding: 8px 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .btn:hover { background: var(--panel-soft); }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: #ffffff; }
+    .btn.primary:hover { background: #0f5ed1; }
+    .btn.danger { color: var(--red); border-color: #efbbbb; }
+    .btn.ghost { border-color: transparent; background: transparent; color: var(--muted); }
+    .btn.ghost:hover { background: var(--panel-soft); color: var(--text); }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 820px;
+      background: #ffffff;
+    }
+
+    th, td {
+      padding: 12px 13px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+      background: #fbfcfd;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .person {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 210px;
+    }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      flex: 0 0 34px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #ffffff;
+      background: #2e3440;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .person-name { font-weight: 750; }
+    .person-email { color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 12px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .badge.pending { background: var(--amber-soft); color: var(--amber); }
+    .badge.active { background: var(--green-soft); color: var(--green); }
+    .badge.paused { background: var(--red-soft); color: var(--red); }
+    .badge.safe { background: var(--accent-soft); color: #1356bc; }
+
+    .actions {
+      display: flex;
+      gap: 7px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .access-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .access-item {
+      background: #fbfcfd;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .access-item strong { font-size: 13px; }
+    .access-item span { color: var(--muted); font-size: 12px; line-height: 1.45; }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(300px, 0.75fr);
+      gap: 18px;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .checklist li {
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr);
+      gap: 10px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .check {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #ffffff;
+      background: var(--green);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .invite-preview {
+      background: #fbfcfd;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .invite-preview code,
+    .codebox {
+      display: block;
+      background: #111318;
+      color: #f6f7f9;
+      border-radius: 8px;
+      padding: 12px;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .empty {
+      border: 1px dashed var(--line-strong);
+      border-radius: 8px;
+      padding: 34px 18px;
+      color: var(--muted);
+      text-align: center;
+      background: #fbfcfd;
+    }
+
+    .notice {
+      background: var(--amber-soft);
+      color: #624100;
+      border: 1px solid #efd489;
+      border-radius: 8px;
+      padding: 12px 14px;
+      line-height: 1.45;
+    }
+
+    .success {
+      background: var(--green-soft);
+      color: #0c5b35;
+      border: 1px solid #a8dfbf;
+      border-radius: 8px;
+      padding: 12px 14px;
+      line-height: 1.45;
+    }
+
+    .video-result {
+      min-height: 210px;
+      border: 1px dashed var(--line-strong);
+      border-radius: 8px;
+      background: #fbfcfd;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .video-result video {
+      width: 100%;
+      max-height: 360px;
+      border-radius: 8px;
+      background: #000000;
+    }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      background: #111318;
+      color: #ffffff;
+      border-radius: 8px;
+      padding: 10px 13px;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: 180ms ease;
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: rgba(11, 14, 20, 0.45);
+      z-index: 40;
+    }
+
+    .modal-backdrop.show { display: grid; }
+
+    .modal {
+      width: min(620px, 100%);
+      background: var(--panel);
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .auth-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: #f6f7f9;
+    }
+
+    .auth-gate.show { display: grid; }
+
+    .auth-card {
+      width: min(460px, 100%);
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .auth-card h2 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.2;
+    }
+
+    .auth-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .auth-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .auth-actions .btn {
+      min-width: 0;
+      white-space: normal;
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    .creator-mode .nav button:not([data-page="creator"]),
+    .creator-mode #topInviteBtn {
+      display: none;
+    }
+
+    .creator-mode .nav {
+      grid-template-columns: 1fr;
+    }
+
+    .admin-locked .main,
+    .admin-locked .sidebar {
+      filter: blur(2px);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .modal h3 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar {
+        position: static;
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+      .nav { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .sidebar-note { display: none; }
+      .hero, .two-col { grid-template-columns: 1fr; }
+      .generator-grid { grid-template-columns: 1fr; }
+      .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .invite-form { grid-template-columns: 1fr 1fr; }
+      .access-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 620px) {
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 16px;
+      }
+      .content { padding: 16px; }
+      .summary-grid, .invite-form { grid-template-columns: 1fr; }
+      .nav { grid-template-columns: 1fr; }
+      .sidebar { padding: 16px; gap: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">G</div>
+        <div>
+          <div class="brand-title">Grok Team</div>
+          <div class="brand-sub">Invite manager</div>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Main navigation">
+        <button class="active" data-page="dashboard">Overview</button>
+        <button data-page="members">Invites</button>
+        <button data-page="creator">Creator</button>
+        <button data-page="settings">Owner setup</button>
+      </nav>
+
+      <div class="sidebar-note">
+        Creator accounts are configured with no billing access and no team directory visibility in this manager.
+      </div>
+      <button class="btn" id="logoutBtn" type="button">Log out</button>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1>Invite creators to make Grok videos</h1>
+          <p>Send one-time activation invites, let creators generate Grok Imagine videos, and keep each creator at 10 videos per day with 15-second video length.</p>
+        </div>
+        <button class="btn primary" id="topInviteBtn">Send invite</button>
+      </header>
+
+      <section class="content">
+        <div id="dashboard" class="page active">
+          <section class="hero">
+            <div>
+              <h2>A simple owner console for Grok video teams</h2>
+              <p>Add a creator by email, send them an activation link, and manage only the limits they need for video generation. Billing and other team members stay owner-only.</p>
+            </div>
+            <div class="access-grid">
+              <div class="access-item">
+                <strong>10 videos/day</strong>
+                <span>Default daily creation cap for every invited creator.</span>
+              </div>
+              <div class="access-item">
+                <strong>15 seconds/video</strong>
+                <span>Matches the short video duration cap you wanted from the console workflow.</span>
+              </div>
+              <div class="access-item">
+                <strong>Invite required</strong>
+                <span>Creators stay pending until they open their activation link.</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="summary-grid" aria-label="Team summary">
+            <div class="stat">
+              <div class="stat-label">Invited creators</div>
+              <div class="stat-value" id="statTotal">0</div>
+              <div class="stat-sub">Email invites sent from this page</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Activated</div>
+              <div class="stat-value" id="statActive">0</div>
+              <div class="stat-sub">Can create videos today</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Daily limit</div>
+              <div class="stat-value" id="statDaily">10</div>
+              <div class="stat-sub">Videos per creator per day</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Max duration</div>
+              <div class="stat-value" id="statSeconds">15s</div>
+              <div class="stat-sub">Per generated video</div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">Invite a creator</h3>
+                <div class="panel-sub">This opens your email app with a ready-to-send activation message.</div>
+              </div>
+            </div>
+            <form class="invite-form" id="inviteForm">
+              <div class="field">
+                <label for="nameInput">Name</label>
+                <input id="nameInput" required placeholder="Jane Creator" autocomplete="name" />
+              </div>
+              <div class="field">
+                <label for="emailInput">Email</label>
+                <input id="emailInput" type="email" required placeholder="jane@example.com" autocomplete="email" />
+              </div>
+              <div class="field">
+                <label for="dailyInput">Videos/day</label>
+                <input id="dailyInput" type="number" min="1" max="10" value="10" />
+              </div>
+              <div class="field">
+                <label for="secondsInput">Seconds/video</label>
+                <input id="secondsInput" type="number" min="1" max="15" value="15" />
+              </div>
+              <button class="btn primary" type="submit">Invite</button>
+            </form>
+          </section>
+
+          <section class="two-col">
+            <div class="panel">
+              <div>
+                <h3 class="panel-title">Creator permissions</h3>
+                <div class="panel-sub">Use this as your owner-side access policy.</div>
+              </div>
+              <ul class="checklist">
+                <li><span class="check">✓</span><span>Creators can generate Grok videos only after accepting the email activation link.</span></li>
+                <li><span class="check">✓</span><span>Creators cannot view billing information, payment methods, credits, invoices, or usage cost.</span></li>
+                <li><span class="check">✓</span><span>Creators cannot view the full team directory or other invited members.</span></li>
+                <li><span class="check">✓</span><span>Owners can pause access, resend invites, and change daily limits from this page.</span></li>
+              </ul>
+            </div>
+            <div class="panel">
+              <div>
+                <h3 class="panel-title">Important note</h3>
+                <div class="panel-sub">Static HTML can prepare the workflow, but cannot enforce xAI account permissions by itself.</div>
+              </div>
+              <div class="notice">
+                For real enforcement, create users in Grok Business or your own backend with creator-only roles. Keep the owner API key and billing controls server-side; never put them in this HTML file.
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div id="members" class="page">
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">Invited creators</h3>
+                <div class="panel-sub">Pending users must activate their invite before joining your team.</div>
+              </div>
+              <button class="btn primary" id="memberInviteBtn">New invite</button>
+            </div>
+            <div id="memberList"></div>
+          </section>
+        </div>
+
+        <div id="creator" class="page">
+          <section class="two-col">
+            <div class="panel">
+              <div>
+                <h3 class="panel-title">Creator video generator</h3>
+                <div class="panel-sub">Creators sign in with an activated email, then generate videos within their daily limit.</div>
+              </div>
+              <div class="field">
+                <label for="creatorEmail">Creator email</label>
+                <input id="creatorEmail" type="email" placeholder="creator@example.com" />
+              </div>
+              <div class="field">
+                <label for="videoPrompt">Video prompt</label>
+                <textarea id="videoPrompt" placeholder="A cinematic 8 second product video with soft camera movement..."></textarea>
+              </div>
+              <div class="field">
+                <label for="imageAttachment">Attach image for image-to-video</label>
+                <input id="imageAttachment" type="file" accept="image/*" />
+              </div>
+              <div id="attachmentPreview" class="invite-preview" style="display:none;"></div>
+              <div class="invite-form" style="grid-template-columns: 120px 130px 130px auto;">
+                <div class="field">
+                  <label for="videoDuration">Seconds</label>
+                  <input id="videoDuration" type="number" min="1" max="15" value="10" />
+                </div>
+                <div class="field">
+                  <label for="videoAspect">Aspect</label>
+                  <select id="videoAspect">
+                    <option value="16:9">16:9</option>
+                    <option value="9:16">9:16</option>
+                    <option value="1:1">1:1</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="videoResolution">Resolution</label>
+                  <select id="videoResolution">
+                    <option value="480p">480p</option>
+                    <option value="720p">720p</option>
+                  </select>
+                </div>
+                <button class="btn primary" id="generateVideoBtn" type="button">Generate</button>
+              </div>
+              <div id="generatorStatus" class="notice">Enter an activated creator email to begin.</div>
+              <div id="videoResult"></div>
+            </div>
+            <div class="panel">
+              <div>
+                <h3 class="panel-title">Creator session</h3>
+                <div class="panel-sub">Invite links are one-time use. After activation, the token is consumed and cannot activate again.</div>
+              </div>
+              <div id="creatorSession" class="empty">No creator selected.</div>
+            </div>
+          </section>
+        </div>
+
+        <div id="settings" class="page">
+          <section class="two-col">
+            <div class="panel">
+              <div>
+                <h3 class="panel-title">Owner-only xAI setup</h3>
+                <div class="panel-sub">Use these steps in the official xAI/Grok console.</div>
+              </div>
+              <ul class="checklist">
+                <li><span class="check">1</span><span>Open Grok Business / xAI Console and invite each person by email from the team management area.</span></li>
+                <li><span class="check">2</span><span>Assign the lowest creator/member role that has video generation access but no billing permissions.</span></li>
+                <li><span class="check">3</span><span>Disable team directory visibility for non-admin users if your plan exposes that setting.</span></li>
+                <li><span class="check">4</span><span>Set daily usage policy to 10 videos and max video duration to 15 seconds wherever xAI exposes video controls.</span></li>
+              </ul>
+              <a class="btn primary" href="https://console.x.ai/" target="_blank" rel="noopener">Open xAI Console</a>
+            </div>
+            <div class="panel">
+              <div>
+                <h3 class="panel-title">Default invite policy</h3>
+                <div class="panel-sub">These values are applied to new local invites.</div>
+              </div>
+              <div class="field">
+                <label for="defaultDaily">Default videos per day</label>
+                <input id="defaultDaily" type="number" min="1" max="10" value="10" />
+              </div>
+              <div class="field">
+                <label for="defaultSeconds">Default seconds per video</label>
+                <input id="defaultSeconds" type="number" min="1" max="15" value="15" />
+              </div>
+              <button class="btn" id="saveDefaultsBtn">Save defaults</button>
+            </div>
+          </section>
+
+          <section class="two-col">
+            <div class="panel">
+              <div>
+                <h3 class="panel-title">Grok Imagine API access</h3>
+                <div class="panel-sub">Use a backend proxy for production. Direct browser mode is only for private local testing.</div>
+              </div>
+              <div class="field">
+                <label for="proxyEndpoint">Backend proxy endpoint</label>
+                <input id="proxyEndpoint" placeholder="https://your-domain.com/api/grok-video" />
+              </div>
+              <div class="field">
+                <label for="emailEndpoint">Email invite trigger endpoint</label>
+                <input id="emailEndpoint" placeholder="https://your-domain.com/api/send-activation-email" />
+              </div>
+              <div class="field">
+                <label for="apiKeyInput">Private local API key</label>
+                <input id="apiKeyInput" type="password" placeholder="xai-..." />
+              </div>
+              <button class="btn" id="saveApiBtn">Save API settings</button>
+              <div class="notice">For real users, keep the xAI key on your server. The creator browser should call your proxy, and your proxy should call xAI.</div>
+            </div>
+            <div class="panel">
+              <div>
+                <h3 class="panel-title">Admin recharge</h3>
+                <div class="panel-sub">Track prepaid usage locally and open xAI billing when you need to recharge the real account.</div>
+              </div>
+              <div class="stat" style="min-height:auto;">
+                <div class="stat-label">Local account balance</div>
+                <div class="stat-value" id="balanceValue">$0.00</div>
+                <div class="stat-sub">Estimated against Grok Imagine video usage</div>
+              </div>
+              <div class="field">
+                <label for="rechargeAmount">Recharge amount</label>
+                <input id="rechargeAmount" type="number" min="1" step="1" value="25" />
+              </div>
+              <div class="actions">
+                <button class="btn primary" id="rechargeBtn">Recharge local balance</button>
+                <a class="btn" href="https://console.x.ai/" target="_blank" rel="noopener">Open xAI billing</a>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div>
+              <h3 class="panel-title">Backend endpoint shape</h3>
+              <div class="panel-sub">Use this when you are ready to send real emails instead of mailto links.</div>
+            </div>
+            <div class="codebox">POST /api/team-invites
+{
+  "email": "creator@example.com",
+  "role": "creator",
+  "requiresActivation": true,
+  "permissions": {
+    "canGenerateVideos": true,
+    "canViewBilling": false,
+    "canViewTeamMembers": false
+  },
+  "limits": {
+    "videosPerDay": 10,
+    "maxVideoSeconds": 15
+  }
+}</div>
+            <div class="codebox">POST /api/send-activation-email
+{
+  "to": "creator@example.com",
+  "name": "Jane Creator",
+  "activationUrl": "https://your-app.com/activate?token=...",
+  "expiresOnUse": true,
+  "limits": {
+    "videosPerDay": 10,
+    "maxVideoSeconds": 15
+  }
+}</div>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <h3 id="modalTitle">Invite ready</h3>
+      <div id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="auth-gate" id="authGate">
+    <form class="auth-card" id="profileForm">
+      <div>
+        <h2 id="authTitle">Create your creator profile</h2>
+        <p id="authCopy">Set a username and password. After this first login, your activation link expires.</p>
+      </div>
+      <div class="auth-actions">
+        <button class="btn" id="creatorLoginModeBtn" type="button">Login</button>
+        <button class="btn" id="creatorCreateModeBtn" type="button">Create account</button>
+        <button class="btn" id="adminLoginModeBtn" type="button">Admin login</button>
+      </div>
+      <div class="field">
+        <label for="profileUsername">Username</label>
+        <input id="profileUsername" required autocomplete="username" placeholder="creator_name" />
+      </div>
+      <div class="field">
+        <label for="profilePassword">Password</label>
+        <input id="profilePassword" required type="password" autocomplete="new-password" placeholder="Create password" />
+      </div>
+      <div class="field" id="adminSetupCodeField" style="display:none;">
+        <label for="adminSetupCode">Admin setup code</label>
+        <input id="adminSetupCode" type="password" autocomplete="off" placeholder="Required for first admin setup" />
+      </div>
+      <button class="btn primary" id="profileSubmitBtn" type="submit">Create profile</button>
+      <div class="notice" id="authNotice">Creator accounts cannot invite teammates, view billing, or see other members.</div>
+    </form>
+  </div>
+
+  <script>
+    const storeKey = "grok_team_invite_manager_v1";
+    const adminAuthEndpoint = "/api/admin-auth";
+
+    const state = loadState();
+
+    const pages = document.querySelectorAll(".page");
+    const navButtons = document.querySelectorAll(".nav button");
+    const inviteForm = document.getElementById("inviteForm");
+    const modalBackdrop = document.getElementById("modalBackdrop");
+
+    function loadState() {
+      const fallback = {
+        defaults: { daily: 10, seconds: 15 },
+        members: [],
+        api: { proxyEndpoint: "", emailEndpoint: "", apiKey: "" },
+        billing: { balance: 0, spent: 0 },
+        admin: null,
+        profiles: {},
+        usedInviteTokens: {},
+        session: null
+      };
+      try {
+        const saved = JSON.parse(localStorage.getItem(storeKey)) || fallback;
+        return {
+          ...fallback,
+          ...saved,
+          defaults: { ...fallback.defaults, ...(saved.defaults || {}) },
+          api: { ...fallback.api, ...(saved.api || {}) },
+          billing: { ...fallback.billing, ...(saved.billing || {}) },
+          admin: saved.admin || null,
+          profiles: { ...fallback.profiles, ...(saved.profiles || {}) },
+          usedInviteTokens: { ...fallback.usedInviteTokens, ...(saved.usedInviteTokens || {}) },
+          session: saved.session || null,
+          members: (saved.members || []).map(member => ({
+            tokenConsumed: false,
+            lastUsageDate: todayKey(),
+            ...member
+          }))
+        };
+      } catch {
+        return fallback;
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(storeKey, JSON.stringify(state));
+    }
+
+    function activationTokenFromHash() {
+      const match = location.hash.match(/^#activate=([a-f0-9]+)$/);
+      return match ? match[1] : "";
+    }
+
+    function passwordHash(value) {
+      return btoa(unescape(encodeURIComponent(value)));
+    }
+
+    function isCreatorSession() {
+      return state.session && state.session.role === "creator";
+    }
+
+    function isAdminSession() {
+      return state.session && state.session.role === "admin";
+    }
+
+    function setAuthMode(mode, token = "") {
+      const gate = document.getElementById("authGate");
+      const title = document.getElementById("authTitle");
+      const copy = document.getElementById("authCopy");
+      const submit = document.getElementById("profileSubmitBtn");
+      const username = document.getElementById("profileUsername");
+      const password = document.getElementById("profilePassword");
+      const setupField = document.getElementById("adminSetupCodeField");
+      const notice = document.getElementById("authNotice");
+
+      gate.dataset.mode = mode;
+      gate.dataset.token = token;
+      setupField.style.display = "none";
+      username.value = "";
+      password.value = "";
+
+      if (mode === "creator-login") {
+        title.textContent = "Login";
+        copy.textContent = "Use the username and password you created from your activation email.";
+        submit.textContent = "Login";
+        username.placeholder = "creator username";
+        password.placeholder = "Creator password";
+        password.autocomplete = "current-password";
+        notice.textContent = "Creator accounts can generate Grok Imagine videos only. They cannot invite teammates or view billing.";
+        return;
+      }
+
+      if (mode === "creator-create") {
+        title.textContent = "Create account";
+        copy.textContent = token
+          ? "Create your creator profile from your invite link. This activation link expires after account creation."
+          : "Create account is only available from the activation link sent to your email.";
+        submit.textContent = "Create account";
+        username.placeholder = "creator_name";
+        password.placeholder = "Create password";
+        password.autocomplete = "new-password";
+        notice.textContent = token
+          ? "After you create this profile, use Login for future access."
+          : "Ask the admin for an activation email if you do not have one.";
+        return;
+      }
+
+      title.textContent = "Admin login";
+      copy.textContent = state.admin
+        ? "Log in to manage invites, billing, API settings, and team limits."
+        : "Create the first admin with the private setup code. After this, admins use Admin login.";
+      submit.textContent = state.admin ? "Admin login" : "Create first admin";
+      username.placeholder = "admin username";
+      password.placeholder = state.admin ? "Admin password" : "Create admin password";
+      password.autocomplete = state.admin ? "current-password" : "new-password";
+      setupField.style.display = state.admin ? "none" : "grid";
+      notice.textContent = state.admin
+        ? "Admin access is separate from creator accounts."
+        : "Enter the private setup code you chose for first admin setup.";
+    }
+
+    function enterAdminMode() {
+      document.body.classList.remove("creator-mode", "admin-locked");
+      document.getElementById("authGate").classList.remove("show");
+      setPage("dashboard");
+      render();
+    }
+
+    function showAdminGate() {
+      document.body.classList.remove("creator-mode");
+      document.body.classList.add("admin-locked");
+      const gate = document.getElementById("authGate");
+      const username = document.getElementById("profileUsername");
+      setAuthMode("creator-login");
+      gate.classList.add("show");
+      setTimeout(() => username.focus(), 50);
+    }
+
+    function enterCreatorMode() {
+      document.body.classList.add("creator-mode");
+      setPage("creator");
+      document.getElementById("authGate").classList.remove("show");
+      if (state.session?.email) {
+        document.getElementById("creatorEmail").value = state.session.email;
+      }
+      renderCreatorSession();
+    }
+
+    function showProfileGate(token) {
+      document.body.classList.add("creator-mode");
+      document.body.classList.remove("admin-locked");
+      setPage("creator");
+      const gate = document.getElementById("authGate");
+
+      if (state.usedInviteTokens[token]) {
+        setAuthMode("creator-login");
+        document.getElementById("authTitle").textContent = "Activation link expired";
+        document.getElementById("authCopy").textContent = "This invite link has already been used. Log in with the profile you created.";
+      } else {
+        setAuthMode("creator-create", token);
+      }
+
+      gate.classList.add("show");
+    }
+
+    function setAuthNotice(message) {
+      document.getElementById("authNotice").textContent = message;
+    }
+
+    async function verifyAdminSetupCode(username, password, setupCode) {
+      if (location.protocol === "file:") {
+        throw new Error("Admin setup must be tested on your Cloudflare Pages URL, not the local file:// page.");
+      }
+
+      const response = await fetch(adminAuthEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password, setupCode })
+      });
+
+      if (!response.ok) {
+        let message = "Admin setup failed.";
+        try {
+          const data = await response.json();
+          message = data.error || message;
+        } catch {
+          message = await response.text() || message;
+        }
+        throw new Error(message);
+      }
+
+      return response.json();
+    }
+
+    async function handleProfileSubmit(event) {
+      event.preventDefault();
+      const gate = document.getElementById("authGate");
+      const username = document.getElementById("profileUsername").value.trim().toLowerCase();
+      const password = document.getElementById("profilePassword").value;
+      const mode = gate.dataset.mode;
+      const token = gate.dataset.token;
+
+      if (!username || !password) {
+        toast("Username and password are required.");
+        return;
+      }
+
+      if (mode === "admin-login" && !state.admin) {
+        const setupCode = document.getElementById("adminSetupCode").value;
+        try {
+          await verifyAdminSetupCode(username, password, setupCode);
+        } catch (error) {
+          const message = error.message || "Invalid admin setup code.";
+          setAuthNotice(message);
+          toast(message);
+          return;
+        }
+        state.admin = {
+          username,
+          passwordHash: passwordHash(password),
+          createdAt: new Date().toISOString()
+        };
+        state.session = { username, role: "admin" };
+        saveState();
+        document.getElementById("profileForm").reset();
+        enterAdminMode();
+        toast("Admin login created.");
+        return;
+      }
+
+      if (mode === "admin-login") {
+        if (!state.admin || state.admin.username !== username || state.admin.passwordHash !== passwordHash(password)) {
+          toast("Invalid admin username or password.");
+          return;
+        }
+        state.session = { username, role: "admin" };
+        saveState();
+        document.getElementById("profileForm").reset();
+        enterAdminMode();
+        toast("Admin logged in.");
+        return;
+      }
+
+      if (mode === "creator-create") {
+        if (!token) {
+          toast("Create account requires an email activation link.");
+          return;
+        }
+        if (state.profiles[username]) {
+          toast("That username already exists. Choose another.");
+          return;
+        }
+        state.profiles[username] = {
+          username,
+          passwordHash: passwordHash(password),
+          role: "creator",
+          createdAt: new Date().toISOString()
+        };
+        if (token) state.usedInviteTokens[token] = true;
+        state.session = {
+          username,
+          name: username,
+          email: username,
+          role: "creator",
+          status: "active",
+          dailyLimit: state.defaults.daily,
+          maxSeconds: state.defaults.seconds,
+          usedToday: 0,
+          lastUsageDate: todayKey()
+        };
+        saveState();
+        history.replaceState(null, "", location.href.split("#")[0]);
+        enterCreatorMode();
+        toast("Profile created. Invite link expired.");
+        return;
+      }
+
+      if (mode !== "creator-login") {
+        toast("Choose Login, Create account, or Admin login.");
+        return;
+      }
+
+      const profile = state.profiles[username];
+      if (!profile || profile.passwordHash !== passwordHash(password)) {
+        toast("Invalid username or password.");
+        return;
+      }
+      state.session = {
+        username,
+        name: username,
+        email: username,
+        role: "creator",
+        status: "active",
+        dailyLimit: state.defaults.daily,
+        maxSeconds: state.defaults.seconds,
+        usedToday: state.session?.username === username ? state.session.usedToday || 0 : 0,
+        lastUsageDate: state.session?.username === username ? state.session.lastUsageDate || todayKey() : todayKey()
+      };
+      saveState();
+      history.replaceState(null, "", location.href.split("#")[0]);
+      enterCreatorMode();
+      toast("Logged in.");
+    }
+
+    function logout() {
+      state.session = null;
+      saveState();
+      document.getElementById("profileForm").reset();
+      history.replaceState(null, "", location.href.split("#")[0]);
+      showAdminGate();
+      toast("Logged out.");
+    }
+
+    function chooseCreatorLogin() {
+      document.body.classList.add("admin-locked");
+      document.body.classList.remove("creator-mode");
+      setAuthMode("creator-login");
+    }
+
+    function chooseCreatorCreate() {
+      document.body.classList.add("creator-mode");
+      document.body.classList.remove("admin-locked");
+      setPage("creator");
+      setAuthMode("creator-create", activationTokenFromHash());
+    }
+
+    function chooseAdminLogin() {
+      document.body.classList.add("admin-locked");
+      document.body.classList.remove("creator-mode");
+      setAuthMode("admin-login");
+    }
+
+    function clamp(value, min, max) {
+      const number = Number.parseInt(value, 10);
+      if (Number.isNaN(number)) return max;
+      return Math.max(min, Math.min(max, number));
+    }
+
+    function todayKey() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function resetDailyUsage(member) {
+      if (member.lastUsageDate !== todayKey()) {
+        member.usedToday = 0;
+        member.lastUsageDate = todayKey();
+      }
+    }
+
+    function videoCost(seconds, resolution) {
+      const rate = resolution === "720p" ? 0.07 : 0.05;
+      return Number((seconds * rate).toFixed(2));
+    }
+
+    function initials(name) {
+      return name.split(/\s+/).filter(Boolean).map(part => part[0]).join("").slice(0, 2).toUpperCase() || "U";
+    }
+
+    function token() {
+      const bytes = new Uint8Array(12);
+      crypto.getRandomValues(bytes);
+      return Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("");
+    }
+
+    function activationUrl(inviteToken) {
+      const base = location.href.split("#")[0];
+      return `${base}#activate=${inviteToken}`;
+    }
+
+    function inviteEmail(member) {
+      const link = activationUrl(member.token);
+      const subject = encodeURIComponent("Activate your Grok video team account");
+      const body = encodeURIComponent(
+        `Hi ${member.name},\n\nYou've been invited to join my Grok video team.\n\nActivate your account here:\n${link}\n\nThis invite link expires immediately after your first successful login.\n\nYour creator limits:\n- ${member.dailyLimit} videos per day\n- Up to ${member.maxSeconds} seconds per video\n\nYour account is creator-only, so billing information and other team members will not be visible.\n\nThanks.`
+      );
+      return `mailto:${member.email}?subject=${subject}&body=${body}`;
+    }
+
+    function emailPayload(member) {
+      return {
+        to: member.email,
+        name: member.name,
+        activationUrl: activationUrl(member.token),
+        expiresOnUse: true,
+        limits: {
+          videosPerDay: member.dailyLimit,
+          maxVideoSeconds: member.maxSeconds
+        },
+        permissions: {
+          canGenerateVideos: true,
+          canViewBilling: false,
+          canViewTeamMembers: false
+        }
+      };
+    }
+
+    function setPage(id) {
+      if (isCreatorSession() && id !== "creator") id = "creator";
+      pages.forEach(page => page.classList.toggle("active", page.id === id));
+      navButtons.forEach(button => button.classList.toggle("active", button.dataset.page === id));
+    }
+
+    function toast(message) {
+      const el = document.getElementById("toast");
+      el.textContent = message;
+      el.classList.add("show");
+      window.setTimeout(() => el.classList.remove("show"), 2200);
+    }
+
+    function openModal(title, body, footer) {
+      document.getElementById("modalTitle").textContent = title;
+      document.getElementById("modalBody").innerHTML = body;
+      document.getElementById("modalFooter").innerHTML = footer;
+      modalBackdrop.classList.add("show");
+    }
+
+    function closeModal() {
+      modalBackdrop.classList.remove("show");
+    }
+
+    function addInvite(event) {
+      event.preventDefault();
+      const name = document.getElementById("nameInput").value.trim();
+      const email = document.getElementById("emailInput").value.trim().toLowerCase();
+      const dailyLimit = clamp(document.getElementById("dailyInput").value, 1, 10);
+      const maxSeconds = clamp(document.getElementById("secondsInput").value, 1, 15);
+
+      if (!name || !email) {
+        toast("Name and email are required.");
+        return;
+      }
+      if (state.members.some(member => member.email === email)) {
+        toast("That email has already been invited.");
+        return;
+      }
+
+      const member = {
+        id: Date.now(),
+        name,
+        email,
+        dailyLimit,
+        maxSeconds,
+        status: "pending",
+        token: token(),
+        tokenConsumed: false,
+        usedToday: 0,
+        lastUsageDate: todayKey(),
+        invitedAt: new Date().toISOString()
+      };
+
+      state.members.unshift(member);
+      saveState();
+      inviteForm.reset();
+      document.getElementById("dailyInput").value = state.defaults.daily;
+      document.getElementById("secondsInput").value = state.defaults.seconds;
+      render();
+      showInvite(member);
+    }
+
+    function showInvite(member) {
+      const link = activationUrl(member.token);
+      openModal(
+        `Invite ${member.name}`,
+        `<div class="invite-preview">
+          <div><strong>Email:</strong> ${member.email}</div>
+          <div><strong>Limits:</strong> ${member.dailyLimit} videos/day, ${member.maxSeconds} seconds/video</div>
+          <div><strong>Link behavior:</strong> expires immediately after activation login</div>
+          <div><strong>Activation link:</strong></div>
+          <code>${link}</code>
+        </div>`,
+        `<button class="btn primary" onclick="sendActivationEmail(${member.id})">Send activation email</button>
+         <a class="btn" href="${inviteEmail(member)}">Open email app</a>
+         <button class="btn" onclick="copyText('${link}')">Copy activation link</button>
+         <button class="btn ghost" onclick="closeModal()">Done</button>`
+      );
+    }
+
+    async function sendActivationEmail(id) {
+      const member = state.members.find(item => item.id === id);
+      if (!member) return;
+      if (!state.api.emailEndpoint) {
+        window.location.href = inviteEmail(member);
+        toast("No email endpoint set. Opening your email app instead.");
+        return;
+      }
+      try {
+        const response = await fetch(state.api.emailEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(emailPayload(member))
+        });
+        if (!response.ok) throw new Error(await response.text());
+        member.emailSentAt = new Date().toISOString();
+        saveState();
+        render();
+        toast("Activation email sent.");
+      } catch (error) {
+        toast(error.message || "Email trigger failed.");
+      }
+    }
+
+    function copyText(text) {
+      navigator.clipboard.writeText(text).then(() => toast("Copied."));
+    }
+
+    function activateFromHash() {
+      const match = location.hash.match(/^#activate=([a-f0-9]+)$/);
+      if (!match) return;
+      showProfileGate(match[1]);
+    }
+
+    function resend(id) {
+      const member = state.members.find(item => item.id === id);
+      if (member) {
+        if (member.tokenConsumed) {
+          member.token = token();
+          member.tokenConsumed = false;
+          member.status = "pending";
+          saveState();
+          render();
+        }
+        showInvite(member);
+      }
+    }
+
+    function togglePause(id) {
+      const member = state.members.find(item => item.id === id);
+      if (!member) return;
+      member.status = member.status === "paused" ? "active" : "paused";
+      saveState();
+      render();
+    }
+
+    function removeMember(id) {
+      const index = state.members.findIndex(item => item.id === id);
+      if (index >= 0) {
+        state.members.splice(index, 1);
+        saveState();
+        render();
+        toast("Invite removed.");
+      }
+    }
+
+    function simulateUse(id) {
+      const member = state.members.find(item => item.id === id);
+      if (!member || member.status !== "active") return;
+      resetDailyUsage(member);
+      if (member.usedToday >= member.dailyLimit) {
+        toast(`${member.name} has reached today's limit.`);
+        return;
+      }
+      member.usedToday += 1;
+      saveState();
+      render();
+    }
+
+    function selectedCreator() {
+      if (isCreatorSession()) {
+        resetDailyUsage(state.session);
+        return state.session;
+      }
+      const email = document.getElementById("creatorEmail").value.trim().toLowerCase();
+      const member = state.members.find(item => item.email === email);
+      if (member) resetDailyUsage(member);
+      return member;
+    }
+
+    function renderCreatorSession() {
+      const holder = document.getElementById("creatorSession");
+      const member = selectedCreator();
+      if (!member) {
+        holder.innerHTML = "No activated creator selected.";
+        return;
+      }
+      holder.innerHTML = `
+        <div class="person" style="margin-bottom:12px;">
+          <div class="avatar">${initials(member.name)}</div>
+          <div>
+            <div class="person-name">${member.name}</div>
+            <div class="person-email">${member.email}</div>
+          </div>
+        </div>
+        <div class="access-grid" style="grid-template-columns:1fr;">
+          <div class="access-item"><strong>${member.usedToday} / ${member.dailyLimit} videos used</strong><span>Daily usage resets each calendar day on this device.</span></div>
+          <div class="access-item"><strong>${member.maxSeconds} seconds max</strong><span>Longer requests are automatically capped.</span></div>
+          <div class="access-item"><strong>${statusBadge(member.status)}</strong><span>Only active creators can generate.</span></div>
+        </div>`;
+    }
+
+    function saveApiSettings() {
+      state.api.proxyEndpoint = document.getElementById("proxyEndpoint").value.trim();
+      state.api.emailEndpoint = document.getElementById("emailEndpoint").value.trim();
+      state.api.apiKey = document.getElementById("apiKeyInput").value.trim();
+      saveState();
+      toast("API settings saved.");
+    }
+
+    function recharge() {
+      const amount = Number.parseFloat(document.getElementById("rechargeAmount").value);
+      if (!Number.isFinite(amount) || amount <= 0) {
+        toast("Enter a recharge amount.");
+        return;
+      }
+      state.billing.balance = Number((state.billing.balance + amount).toFixed(2));
+      saveState();
+      render();
+      toast(`Recharged $${amount.toFixed(2)} locally.`);
+    }
+
+    function readAttachment() {
+      const input = document.getElementById("imageAttachment");
+      const file = input.files && input.files[0];
+      if (!file) return Promise.resolve(null);
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          dataUrl: reader.result
+        });
+        reader.onerror = () => reject(new Error("Could not read the attached image."));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function previewAttachment() {
+      const input = document.getElementById("imageAttachment");
+      const preview = document.getElementById("attachmentPreview");
+      const file = input.files && input.files[0];
+      if (!file) {
+        preview.style.display = "none";
+        preview.innerHTML = "";
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      preview.style.display = "grid";
+      preview.innerHTML = `
+        <div><strong>Attached image:</strong> ${file.name}</div>
+        <img src="${url}" alt="Attached image preview" style="width:100%;max-height:260px;object-fit:cover;border-radius:8px;" />
+        <div class="panel-sub">This image will be sent to your backend proxy for image-to-video generation.</div>`;
+    }
+
+    async function callVideoApi(payload) {
+      if (state.api.proxyEndpoint) {
+        const response = await fetch(state.api.proxyEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error(await response.text());
+        return response.json();
+      }
+
+      if (!state.api.apiKey) {
+        throw new Error("Add a backend proxy endpoint or private local xAI API key in Owner setup.");
+      }
+
+      const create = await fetch("https://api.x.ai/v1/videos/generations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${state.api.apiKey}`
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!create.ok) throw new Error(await create.text());
+      const created = await create.json();
+      const requestId = created.request_id;
+      if (!requestId) return created;
+
+      for (let attempt = 0; attempt < 90; attempt += 1) {
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        const poll = await fetch(`https://api.x.ai/v1/videos/${requestId}`, {
+          headers: { "Authorization": `Bearer ${state.api.apiKey}` }
+        });
+        if (!poll.ok) throw new Error(await poll.text());
+        const data = await poll.json();
+        if (data.status === "done") return data;
+        if (data.status === "expired" || data.status === "failed") {
+          throw new Error(`Video request ${data.status}.`);
+        }
+        document.getElementById("generatorStatus").textContent = `Generating video... ${data.status || "processing"}`;
+      }
+      throw new Error("Video generation timed out while polling.");
+    }
+
+    async function generateVideo() {
+      const status = document.getElementById("generatorStatus");
+      const result = document.getElementById("videoResult");
+      const member = selectedCreator();
+      if (!member) {
+        status.textContent = "Creator email was not found. Send and activate an invite first.";
+        return;
+      }
+      if (member.status !== "active") {
+        status.textContent = "This creator must activate their invite before generating videos.";
+        return;
+      }
+      if (member.usedToday >= member.dailyLimit) {
+        status.textContent = "Daily limit reached for this creator.";
+        return;
+      }
+
+      const prompt = document.getElementById("videoPrompt").value.trim();
+      const duration = Math.min(clamp(document.getElementById("videoDuration").value, 1, 15), member.maxSeconds);
+      const aspectRatio = document.getElementById("videoAspect").value;
+      const resolution = document.getElementById("videoResolution").value;
+      const cost = videoCost(duration, resolution);
+
+      if (!prompt) {
+        status.textContent = "Enter a prompt before generating.";
+        return;
+      }
+      if (state.billing.balance < cost) {
+        status.textContent = `Recharge needed. This ${duration}s ${resolution} video is estimated at $${cost.toFixed(2)}.`;
+        return;
+      }
+
+      let attachment = null;
+      try {
+        attachment = await readAttachment();
+      } catch (error) {
+        status.textContent = error.message;
+        return;
+      }
+
+      if (attachment && !state.api.proxyEndpoint) {
+        status.textContent = "Attached images need the backend proxy so the file can be uploaded or converted to an xAI-compatible image URL.";
+        return;
+      }
+
+      const payload = {
+        model: "grok-imagine-video",
+        prompt,
+        duration,
+        aspect_ratio: aspectRatio,
+        resolution
+      };
+
+      if (attachment) {
+        payload.image = {
+          type: "uploaded_image",
+          name: attachment.name,
+          mimeType: attachment.type,
+          size: attachment.size,
+          dataUrl: attachment.dataUrl
+        };
+      }
+
+      status.textContent = "Sending request to Grok Imagine...";
+      result.innerHTML = "";
+      document.getElementById("generateVideoBtn").disabled = true;
+      try {
+        const data = await callVideoApi(payload);
+        const url = data.video?.url || data.url || data.output?.[0]?.url || "";
+        member.usedToday += 1;
+        state.billing.balance = Number((state.billing.balance - cost).toFixed(2));
+        state.billing.spent = Number((state.billing.spent + cost).toFixed(2));
+        saveState();
+        render();
+        status.textContent = "Video generated successfully.";
+        result.innerHTML = url
+          ? `<div class="invite-preview"><video src="${url}" controls style="width:100%;border-radius:8px;background:#111318;"></video><a class="btn primary" href="${url}" target="_blank" rel="noopener">Open video</a></div>`
+          : `<div class="codebox">${JSON.stringify(data, null, 2)}</div>`;
+      } catch (error) {
+        status.textContent = error.message || "Video generation failed.";
+      } finally {
+        document.getElementById("generateVideoBtn").disabled = false;
+        renderCreatorSession();
+      }
+    }
+
+    function saveDefaults() {
+      state.defaults.daily = clamp(document.getElementById("defaultDaily").value, 1, 10);
+      state.defaults.seconds = clamp(document.getElementById("defaultSeconds").value, 1, 15);
+      document.getElementById("dailyInput").value = state.defaults.daily;
+      document.getElementById("secondsInput").value = state.defaults.seconds;
+      saveState();
+      render();
+      toast("Defaults saved.");
+    }
+
+    function statusBadge(status) {
+      if (status === "active") return `<span class="badge active">active</span>`;
+      if (status === "paused") return `<span class="badge paused">paused</span>`;
+      return `<span class="badge pending">pending activation</span>`;
+    }
+
+    function renderMembers() {
+      const holder = document.getElementById("memberList");
+      if (!state.members.length) {
+        holder.innerHTML = `<div class="empty">No invites yet. Send your first creator invite from the overview page.</div>`;
+        return;
+      }
+
+      holder.innerHTML = `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Creator</th>
+                <th>Status</th>
+                <th>Daily use</th>
+                <th>Max duration</th>
+                <th>Access</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${state.members.map(member => `
+                <tr>
+                  <td>
+                    <div class="person">
+                      <div class="avatar">${initials(member.name)}</div>
+                      <div>
+                        <div class="person-name">${member.name}</div>
+                        <div class="person-email">${member.email}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>${statusBadge(member.status)}</td>
+                  <td>${member.usedToday} / ${member.dailyLimit} videos</td>
+                  <td>${member.maxSeconds} seconds</td>
+                  <td><span class="badge safe">no billing · no directory</span></td>
+                  <td>
+                    <div class="actions">
+                      <button class="btn" onclick="resend(${member.id})">Invite</button>
+                      <button class="btn" onclick="simulateUse(${member.id})">+ video</button>
+                      <button class="btn" onclick="togglePause(${member.id})">${member.status === "paused" ? "Resume" : "Pause"}</button>
+                      <button class="btn danger" onclick="removeMember(${member.id})">Remove</button>
+                    </div>
+                  </td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    function render() {
+      const active = state.members.filter(member => member.status === "active").length;
+      state.members.forEach(resetDailyUsage);
+      document.getElementById("statTotal").textContent = state.members.length;
+      document.getElementById("statActive").textContent = active;
+      document.getElementById("statDaily").textContent = state.defaults.daily;
+      document.getElementById("statSeconds").textContent = `${state.defaults.seconds}s`;
+      document.getElementById("defaultDaily").value = state.defaults.daily;
+      document.getElementById("defaultSeconds").value = state.defaults.seconds;
+      document.getElementById("proxyEndpoint").value = state.api.proxyEndpoint;
+      document.getElementById("emailEndpoint").value = state.api.emailEndpoint;
+      document.getElementById("apiKeyInput").value = state.api.apiKey;
+      document.getElementById("balanceValue").textContent = `$${state.billing.balance.toFixed(2)}`;
+      renderMembers();
+      renderCreatorSession();
+    }
+
+    navButtons.forEach(button => button.addEventListener("click", () => setPage(button.dataset.page)));
+    inviteForm.addEventListener("submit", addInvite);
+    document.getElementById("saveDefaultsBtn").addEventListener("click", saveDefaults);
+    document.getElementById("saveApiBtn").addEventListener("click", saveApiSettings);
+    document.getElementById("rechargeBtn").addEventListener("click", recharge);
+    document.getElementById("generateVideoBtn").addEventListener("click", generateVideo);
+    document.getElementById("creatorEmail").addEventListener("input", renderCreatorSession);
+    document.getElementById("imageAttachment").addEventListener("change", previewAttachment);
+    document.getElementById("profileForm").addEventListener("submit", handleProfileSubmit);
+    document.getElementById("creatorLoginModeBtn").addEventListener("click", chooseCreatorLogin);
+    document.getElementById("creatorCreateModeBtn").addEventListener("click", chooseCreatorCreate);
+    document.getElementById("adminLoginModeBtn").addEventListener("click", chooseAdminLogin);
+    document.getElementById("logoutBtn").addEventListener("click", logout);
+    document.getElementById("topInviteBtn").addEventListener("click", () => {
+      setPage("dashboard");
+      document.getElementById("nameInput").focus();
+    });
+    document.getElementById("memberInviteBtn").addEventListener("click", () => {
+      setPage("dashboard");
+      document.getElementById("nameInput").focus();
+    });
+    modalBackdrop.addEventListener("click", event => {
+      if (event.target === modalBackdrop) closeModal();
+    });
+
+    document.getElementById("dailyInput").value = state.defaults.daily;
+    document.getElementById("secondsInput").value = state.defaults.seconds;
+    render();
+    if (activationTokenFromHash()) {
+      activateFromHash();
+    } else if (isCreatorSession()) {
+      enterCreatorMode();
+    } else if (isAdminSession()) {
+      enterAdminMode();
+    } else {
+      showAdminGate();
+    }
+  </script>
+</body>
+</html>
